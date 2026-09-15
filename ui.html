@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+      :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: #25262b; background: #f7f7f8; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 18px; font-size: 12px; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+      .brand { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; letter-spacing: -.02em; }
+      .mark { width: 22px; height: 22px; border-radius: 7px; background: #8557e9; position: relative; box-shadow: 0 3px 8px #8557e940; }
+      .mark:before, .mark:after { content: ''; position: absolute; border-radius: 99px; background: white; }
+      .mark:before { width: 7px; height: 7px; top: 5px; left: 5px; }
+      .mark:after { width: 7px; height: 7px; bottom: 5px; right: 5px; opacity: .66; }
+      .hint { color: #7b7c85; font-size: 11px; }
+      .section { margin-bottom: 18px; }
+      .section-title { display: flex; align-items: center; justify-content: space-between; margin: 0 0 8px; color: #6c6d76; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; font-weight: 700; }
+      .card { background: white; border: 1px solid #e8e8ed; border-radius: 12px; box-shadow: 0 1px 2px #16161d08; }
+      .selection { display: flex; align-items: center; gap: 10px; padding: 12px; }
+      .selection-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: #eee9fd; color: #8557e9; font-weight: 800; }
+      .selection-copy { flex: 1; min-width: 0; }
+      .selection-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+      .selection-type { color: #858690; margin-top: 3px; font-size: 11px; }
+      .change { border: 0; background: transparent; color: #8557e9; font: inherit; cursor: pointer; padding: 6px 0 6px 6px; }
+      .empty { padding: 18px; color: #858690; text-align: center; line-height: 1.5; }
+      .property-list { padding: 4px 12px; }
+      .property { display: flex; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px solid #f0f0f3; }
+      .property:last-child { border-bottom: 0; }
+      .prop-icon { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 6px; background: #f1f1f4; color: #777984; font-size: 10px; font-weight: 800; }
+      .prop-name { flex: 1; min-width: 0; }
+      .prop-name strong { display: block; font-weight: 600; }
+      .prop-name span { display: block; margin-top: 2px; color: #9697a0; font-size: 10px; }
+      .match-pill { color: #297b58; background: #eaf8f0; border-radius: 99px; padding: 4px 7px; font-size: 10px; font-weight: 700; }
+      .dropzone { display: block; width: 100%; min-height: 128px; border: 1.5px dashed #c9c5d8; padding: 20px 12px; border-radius: 12px; text-align: center; background: #fcfbff; cursor: pointer; transition: .15s ease; user-select: none; }
+      .dropzone.drag { border-color: #8557e9; background: #f2edff; }
+      .drop-icon { width: 32px; height: 32px; margin: 0 auto 8px; display: grid; place-items: center; color: #8557e9; background: #eee9fd; border-radius: 9px; font-size: 18px; }
+      .drop-title { font-weight: 650; }
+      .drop-subtitle { color: #858690; margin-top: 4px; font-size: 11px; }
+      input[type=file] { display: none; }
+      .file-row { display: flex; align-items: center; gap: 8px; min-height: 38px; margin-top: 8px; padding: 9px 10px; background: white; border: 1px solid #e8e8ed; border-radius: 9px; box-shadow: 0 1px 2px #16161d08; }
+      .file-row span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .file-meta { color: #8a8b94; font-size: 10px; }
+      .data-card { overflow: hidden; }
+      .data-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #e8e8ed; }
+      .data-count { color: #6e6f78; font-size: 11px; }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 10px; }
+      th, td { padding: 8px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid #f0f0f3; }
+      th { color: #777984; font-weight: 700; background: #fafafd; }
+      td { color: #474851; }
+      .mapping { display: grid; gap: 8px; }
+      .mapping-row { display: grid; grid-template-columns: 1fr 20px 1fr; align-items: center; gap: 7px; }
+      .mapping-label { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 9px 10px; border: 1px solid #e4e4e9; border-radius: 8px; background: white; }
+      .mapping-label.source { color: #555762; }
+      .mapping-label.target { border-color: #d8cdf8; background: #faf8ff; }
+      .mapping-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .arrow { text-align: center; color: #a0a1aa; }
+      select { width: 100%; border: 1px solid #e4e4e9; border-radius: 8px; padding: 8px 26px 8px 9px; background: white; color: #34353d; font: inherit; outline: none; }
+      select:focus { border-color: #8557e9; box-shadow: 0 0 0 2px #8557e920; }
+      .footer { position: sticky; bottom: -18px; padding: 14px 0 2px; background: linear-gradient(transparent, #f7f7f8 14px); }
+      button.primary { width: 100%; border: 0; border-radius: 9px; padding: 11px 12px; background: #8557e9; color: white; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px #8557e930; }
+      button.primary:disabled { cursor: default; color: #a8a8b1; background: #e5e5e9; box-shadow: none; }
+      .note { margin-top: 8px; color: #8b8c95; text-align: center; font-size: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar"><div class="brand"><span class="mark"></span>Populate copies</div><div class="hint">v0.1 prototype</div></div>
+    <section class="section">
+      <div class="section-title"><span>Selected component</span><button class="change" id="refresh">Refresh</button></div>
+      <div id="selection" class="card empty">Select a component or instance in Figma.</div>
+    </section>
+    <section class="section">
+      <div class="section-title"><span>Properties</span><span id="property-count"></span></div>
+      <div id="properties" class="card empty">Component properties will appear here.</div>
+    </section>
+    <section class="section">
+      <div class="section-title"><span>Data source</span></div>
+      <label class="dropzone" id="dropzone" for="file-input"><div class="drop-icon">↑</div><div class="drop-title">Drop CSV or Excel file here</div><div class="drop-subtitle">or click to browse · .csv, .xlsx</div></label>
+      <input id="file-input" type="file" accept=".csv,.xlsx,.xls,text/csv" />
+      <div id="file-row"></div>
+    </section>
+    <section class="section" id="preview-section" hidden>
+      <div class="section-title"><span>Preview</span><span id="row-count"></span></div>
+      <div class="card data-card"><div class="data-head"><span id="sheet-name">Sheet 1</span><span class="data-count" id="preview-count"></span></div><div class="table-wrap"><table id="preview"></table></div></div>
+    </section>
+    <section class="section" id="mapping-section" hidden>
+      <div class="section-title"><span>Map data to properties</span><span class="hint">Suggested matches are prefilled</span></div>
+      <div id="mapping" class="mapping"></div>
+    </section>
+    <div class="footer"><button class="primary" id="populate" disabled>Populate copies</button><div class="note">Each row creates a new copy to the right of the original.</div></div>
+    <script>
+      let selection = null;
+      let headers = [];
+      let rows = [];
+      let file = null;
+      const $ = (id) => document.getElementById(id);
+      const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+
+      function renderSelection() {
+        const el = $('selection');
+        const props = $('properties');
+        if (!selection || selection.kind === 'empty') {
+          el.className = 'card empty'; el.textContent = 'Select a component or instance in Figma.';
+          props.className = 'card empty'; props.textContent = 'Component properties will appear here.';
+          $('property-count').textContent = ''; return;
+        }
+        el.className = 'card selection';
+        el.innerHTML = `<div class="selection-icon">◇</div><div class="selection-copy"><div class="selection-name">${escapeHtml(selection.nodeName)}</div><div class="selection-type">${selection.kind === 'instance' ? 'Instance ready to populate' : 'Component · preview only'}</div></div>`;
+        const properties = selection.properties || [];
+        $('property-count').textContent = `${properties.length} found`;
+        if (!properties.length) { props.className = 'card empty'; props.textContent = 'This component has no exposed properties.'; return; }
+        props.className = 'card property-list';
+        props.innerHTML = properties.map(p => `<div class="property"><div class="prop-icon">${p.type === 'TEXT' ? 'T' : p.type === 'BOOLEAN' ? '✓' : '◇'}</div><div class="prop-name"><strong>${escapeHtml(p.name || 'Unnamed property')}</strong><span>${p.type.toLowerCase()}${p.key && p.key !== p.name ? ` · ${escapeHtml(p.key)}` : ''}</span></div>${p.type === 'TEXT' && headers.some(h => normalize(h) === normalize(p.name)) ? '<span class="match-pill">match</span>' : ''}</div>`).join('');
+      }
+
+      function parseCsv(text) {
+        const result = []; let row = []; let cell = ''; let quoted = false;
+        for (let i = 0; i < text.length; i++) { const c = text[i], next = text[i + 1]; if (c === '"' && quoted && next === '"') { cell += '"'; i++; } else if (c === '"') quoted = !quoted; else if (c === ',' && !quoted) { row.push(cell); cell = ''; } else if ((c === '\n' || c === '\r') && !quoted) { if (c === '\r' && next === '\n') i++; row.push(cell); if (row.some(v => v.trim())) result.push(row); row = []; cell = ''; } else cell += c; }
+        if (cell || row.length) { row.push(cell); result.push(row); }
+        const [head, ...data] = result; return { headers: (head || []).map(v => v.trim()), rows: data.map(values => Object.fromEntries((head || []).map((h, i) => [h.trim(), (values[i] || '').trim()]))), sheet: 'CSV file' };
+      }
+
+      async function readFile(selectedFile) {
+        file = selectedFile;
+        if (selectedFile.name.toLowerCase().endsWith('.csv')) return parseCsv(await selectedFile.text());
+        if (!window.XLSX) throw new Error('Excel parser is still loading. Try again in a moment.');
+        const workbook = XLSX.read(await selectedFile.arrayBuffer(), { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        const [head, ...data] = matrix; const cleanHeaders = (head || []).map(v => String(v).trim());
+        return { headers: cleanHeaders, rows: data.map(values => Object.fromEntries(cleanHeaders.map((h, i) => [h, values[i] ?? '']))), sheet: workbook.SheetNames[0] };
+      }
+
+      function renderData(data) {
+        headers = data.headers; rows = data.rows;
+        $('file-row').innerHTML = `<div class="file-row"><span>⌁ ${escapeHtml(file.name)}</span><span class="file-meta">${rows.length} rows</span></div>`;
+        $('preview-section').hidden = false; $('mapping-section').hidden = false; $('sheet-name').textContent = data.sheet; $('preview-count').textContent = `${rows.length} records`;
+        const previewRows = rows.slice(0, 4); $('preview').innerHTML = `<thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${previewRows.map(row => `<tr>${headers.map(h => `<td>${escapeHtml(row[h])}</td>`).join('')}</tr>`).join('')}</tbody>`;
+        const properties = (selection && selection.properties || []).filter(p => !p.readonly);
+        $('mapping').innerHTML = properties.length ? properties.map(p => { const suggestion = headers.find(h => normalize(h) === normalize(p.name)); return `<div class="mapping-row" data-property="${escapeHtml(p.key)}"><select aria-label="Sheet column for ${escapeHtml(p.name)}">${'<option value="">Skip</option>' + headers.map(h => `<option value="${escapeHtml(h)}" ${h === suggestion ? 'selected' : ''}>${escapeHtml(h)}</option>`).join('')}</select><div class="arrow">→</div><div class="mapping-label target"><span>${p.type === 'TEXT' ? 'T' : '◇'}</span><span>${escapeHtml(p.name)} <small>${p.type.toLowerCase()}</small></span></div></div>`; }).join('') : '<div class="empty">Select an instance with editable properties to map data.</div>';
+        $('populate').disabled = !(selection && selection.kind === 'instance' && properties.length && rows.length);
+      }
+
+      $('file-input').addEventListener('change', async (event) => { const selected = event.target.files[0]; if (!selected) return; try { renderData(await readFile(selected)); } catch (error) { $('file-row').innerHTML = `<div class="file-row"><span>${escapeHtml(error.message)}</span></div>`; } });
+      ['dragenter', 'dragover'].forEach(type => $('dropzone').addEventListener(type, e => { e.preventDefault(); $('dropzone').classList.add('drag'); }));
+      ['dragleave', 'drop'].forEach(type => $('dropzone').addEventListener(type, e => { e.preventDefault(); $('dropzone').classList.remove('drag'); }));
+      $('dropzone').addEventListener('drop', async (event) => { const selected = event.dataTransfer.files[0]; if (!selected) return; try { renderData(await readFile(selected)); } catch (error) { $('file-row').innerHTML = `<div class="file-row"><span>${escapeHtml(error.message)}</span></div>`; } });
+      $('refresh').addEventListener('click', () => parent.postMessage({ pluginMessage: { type: 'refresh-selection' } }, '*'));
+      $('populate').addEventListener('click', () => { const mappings = {}; document.querySelectorAll('.mapping-row').forEach(row => { const select = row.querySelector('select'); mappings[row.dataset.property] = select.value; }); parent.postMessage({ pluginMessage: { type: 'populate', rows, mappings } }, '*'); });
+      window.onmessage = (event) => { if (event.data.pluginMessage?.type === 'selection') { selection = event.data.pluginMessage.payload; renderSelection(); if (headers.length && file) renderData({ headers, rows, sheet: $('sheet-name').textContent }); } };
+    </script>
+  </body>
+</html>

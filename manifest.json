@@ -1,0 +1,12 @@
+{
+  "name": "Populate copies",
+  "id": "populate-copies",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["https://cdn.jsdelivr.net"]
+  },
+  "documentAccess": "dynamic-page"
+}
